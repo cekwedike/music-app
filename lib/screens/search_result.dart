@@ -46,7 +46,7 @@ class SearchResultScreen extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
-                Navigator.popUntil(context, ModalRoute.withName('/'));
+                Navigator.popUntil(context, ModalRoute.withName('/home'));
               },
             ),
           ],
