@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_result.dart';
 import 'screens/detail_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(MusicSearchApp());
@@ -19,7 +20,8 @@ class MusicSearchApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => HomeScreen(),
+        '/': (context) => SplashScreen(),
+        '/home': (context) => HomeScreen(),
         '/searchResult': (context) => SearchResultScreen(),
         '/detail': (context) => SongDetailScreen(),
       },
