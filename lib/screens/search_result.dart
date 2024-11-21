@@ -1,38 +1,72 @@
+// search_result.dart
+
 import 'package:flutter/material.dart';
+import 'package:music/screens/favorite.dart';
 
-class SearchResultScreen extends StatelessWidget {
-  final List<dynamic> searchResults;
+class SearchResultScreen extends StatefulWidget {
+  @override
+  _SearchResultScreenState createState() => _SearchResultScreenState();
+}
 
-  SearchResultScreen({required this.searchResults});
+class _SearchResultScreenState extends State<SearchResultScreen> {
+  List<Map<String, dynamic>> _favoriteTracks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getFavoriteTracks();
+  }
+
+  void _getFavoriteTracks() {
+    setState(() {
+      _favoriteTracks = FavoriteScreen.of(context)?.favoriteTracks ?? [];
+    });
+  }
+
+  void _toggleFavorite(Map<String, dynamic> track) {
+    setState(() {
+      if (_favoriteTracks.any((favTrack) => favTrack['id'] == track['id'])) {
+        _favoriteTracks.removeWhere((favTrack) => favTrack['id'] == track['id']);
+        FavoriteScreen.of(context)?.removeFromFavorites(track);
+      } else {
+        _favoriteTracks.add(track);
+        FavoriteScreen.of(context)?.addToFavorites(track);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<dynamic> tracks = ModalRoute.of(context)!.settings.arguments as List<dynamic>;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Search Results'),
-        backgroundColor: Colors.blueAccent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
       ),
       body: ListView.builder(
-        itemCount: searchResults.length,
+        itemCount: tracks.length,
         itemBuilder: (context, index) {
-          final track = searchResults[index];
+          final track = tracks[index];
+          final String trackName = track['name'];
+          final String artistName = track['artists'][0]['name'];
+          final String? albumImageUrl = track['album']['images'].isNotEmpty ? track['album']['images'][0]['url'] : null;
+          final bool isFavorite = _favoriteTracks.any((favTrack) => favTrack['id'] == track['id']);
+
           return ListTile(
-            leading: track['album']['images'].isNotEmpty
+            leading: albumImageUrl != null
                 ? Image.network(
-                    track['album']['images'][0]['url'],
+                    albumImageUrl,
                     width: 50,
                     height: 50,
+                    fit: BoxFit.cover,
                   )
-                : Icon(Icons.music_note, size: 50),
-            title: Text(track['name']),
-            subtitle: Text(track['artists'][0]['name']),
-            trailing: Icon(Icons.play_arrow, color: Colors.orangeAccent),
+                : Icon(Icons.music_note),
+            title: Text(trackName),
+            subtitle: Text(artistName),
+            trailing: IconButton(
+              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+              onPressed: () => _toggleFavorite(track),
+            ),
             onTap: () {
               Navigator.pushNamed(
                 context,
@@ -45,12 +79,18 @@ class SearchResultScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
-                Navigator.pushNamed(context, '/');
+                Navigator.popUntil(context, ModalRoute.withName('/'));
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.favorite),
+              onPressed: () {
+                Navigator.pushNamed(context, '/favorite');
               },
             ),
           ],
