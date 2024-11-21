@@ -12,6 +12,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String clientId = 'edf71530ea9242e7ad70adaedbded238';
   String clientSecret = '737fe2303ac84d83af8acfcdc71093ff';
   String? _accessToken;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -20,54 +21,85 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _getAccessToken() async {
-    final response = await http.post(
-      Uri.parse('https://accounts.spotify.com/api/token'),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ${base64Encode(utf8.encode('$clientId:$clientSecret'))}',
-      },
-      body: {'grant_type': 'client_credentials'},
-    );
+    setState(() => _isLoading = true);
+    try {
+      final response = await http.post(
+        Uri.parse('https://accounts.spotify.com/api/token'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ${base64Encode(utf8.encode('$clientId:$clientSecret'))}',
+        },
+        body: {'grant_type': 'client_credentials'},
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _accessToken = data['access_token'];
-      });
-    } else {
-      print('Failed to get access token. Status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _accessToken = data['access_token'];
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to get access token');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to connect to Spotify. Please try again.'),
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: _getAccessToken,
+          ),
+        ),
+      );
     }
   }
 
   Future<void> _searchTracks(String query) async {
     if (_accessToken == null) {
-      print('Access token is not available');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please wait for connection to Spotify...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
       return;
     }
 
-    final response = await http.get(
-      Uri.parse('https://api.spotify.com/v1/search?q=$query&type=track'),
-      headers: {'Authorization': 'Bearer $_accessToken'},
-    );
+    setState(() => _isLoading = true);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List<dynamic> tracks = data['tracks']['items'];
-      Navigator.pushNamed(
-        context,
-        '/searchResult',
-        arguments: tracks,
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.spotify.com/v1/search?q=$query&type=track'),
+        headers: {'Authorization': 'Bearer $_accessToken'},
       );
-    } else {
-      print('Failed to search tracks. Status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List<dynamic> tracks = data['tracks']['items'];
+        Navigator.pushNamed(
+          context,
+          '/searchResult',
+          arguments: {
+            'tracks': tracks,
+            'accessToken': _accessToken,
+          },
+        );
+      } else {
+        throw Exception('Failed to search tracks');
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to search tracks. Please try again.'),
-          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: () => _searchTracks(query),
+          ),
         ),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -82,35 +114,46 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Search',
-                hintText: 'Enter a song or artist name',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (value) {
-                if (value.trim().isNotEmpty) {
-                  _searchTracks(value.trim());
-                }
-              },
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                String query = _searchController.text.trim();
-                if (query.isNotEmpty) {
-                  _searchTracks(query);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: Text('Search'),
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 300),
+              child: _isLoading
+                  ? CircularProgressIndicator()
+                  : Column(
+                      children: [
+                        TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            labelText: 'Search',
+                            hintText: 'Enter a song or artist name',
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          onSubmitted: (value) {
+                            if (value.trim().isNotEmpty) {
+                              _searchTracks(value.trim());
+                            }
+                          },
+                        ),
+                        SizedBox(height: 16.0),
+                        ElevatedButton(
+                          onPressed: () {
+                            String query = _searchController.text.trim();
+                            if (query.isNotEmpty) {
+                              _searchTracks(query);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: Text('Search'),
+                        ),
+                      ],
+                    ),
             ),
           ],
         ),
