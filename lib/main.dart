@@ -76,7 +76,7 @@ class MusicSearchApp extends StatelessWidget {
       routes: {
         '/': (context) => SplashScreen(),
         '/home': (context) => HomeScreen(),
-        '/searchResult': (context) => SearchResultScreen(),
+        '/searchResult': (context) => SearchResultScreen(searchResults: []),
         '/detail': (context) => SongDetailScreen(),
       },
     );

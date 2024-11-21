@@ -62,6 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       print('Failed to search tracks. Status code: ${response.statusCode}');
       print('Response body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to search tracks. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -84,6 +90,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  _searchTracks(value.trim());
+                }
+              },
             ),
             SizedBox(height: 16.0),
             ElevatedButton(
@@ -93,6 +104,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   _searchTracks(query);
                 }
               },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
               child: Text('Search'),
             ),
           ],
@@ -105,12 +122,18 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
-                // Do nothing, already on the home screen
+                // Do nothing, already on home screen
               },
             ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
