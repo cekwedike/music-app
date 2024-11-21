@@ -1,5 +1,3 @@
-// home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -102,18 +100,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
                 // Do nothing, already on the home screen
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.favorite),
-              onPressed: () {
-                Navigator.pushNamed(context, '/favorite');
               },
             ),
           ],

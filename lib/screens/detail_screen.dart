@@ -1,9 +1,6 @@
-// detail_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:music/screens/favorite.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class SongDetailScreen extends StatefulWidget {
@@ -13,7 +10,6 @@ class SongDetailScreen extends StatefulWidget {
 
 class _SongDetailScreenState extends State<SongDetailScreen> {
   String _lyrics = '';
-  bool _isFavorite = false;
   AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
 
@@ -21,10 +17,6 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   void initState() {
     super.initState();
     _fetchLyrics();
-    // Delay the execution of _checkFavorite() until the next frame
-    Future.delayed(Duration.zero, () {
-      _checkFavorite();
-    });
   }
 
   @override
@@ -48,27 +40,6 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     } else {
       print('Failed to fetch lyrics. Status code: ${response.statusCode}');
       print('Response body: ${response.body}');
-    }
-  }
-
-  void _checkFavorite() {
-    final Map<String, dynamic> track = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final String trackId = track['id'];
-    final List<Map<String, dynamic>> favoriteTracks = FavoriteScreen.of(context)?.favoriteTracks ?? [];
-    setState(() {
-      _isFavorite = favoriteTracks.any((favTrack) => favTrack['id'] == trackId);
-    });
-  }
-
-  void _toggleFavorite() {
-    final Map<String, dynamic> track = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    setState(() {
-      _isFavorite = !_isFavorite;
-    });
-    if (_isFavorite) {
-      FavoriteScreen.of(context)?.addToFavorites(track);
-    } else {
-      FavoriteScreen.of(context)?.removeFromFavorites(track);
     }
   }
 
@@ -102,12 +73,6 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Song Details'),
-        actions: [
-          IconButton(
-            icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
-            onPressed: _toggleFavorite,
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -164,18 +129,12 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
                 Navigator.popUntil(context, ModalRoute.withName('/'));
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.favorite),
-              onPressed: () {
-                Navigator.pushNamed(context, '/favorite');
               },
             ),
           ],
