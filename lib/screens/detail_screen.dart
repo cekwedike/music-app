@@ -1,293 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:audioplayers/audioplayers.dart';
+import '../widgets/track_player_widget.dart';
+import '../widgets/artist_section_widget.dart';
+import '../models/spotify_models.dart';
 
 class SongDetailScreen extends StatefulWidget {
   @override
   _SongDetailScreenState createState() => _SongDetailScreenState();
 }
 
-class _SongDetailScreenState extends State<SongDetailScreen> {
-  String _lyrics = '';
-  AudioPlayer _audioPlayer = AudioPlayer();
+class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  
+  bool _isLoading = true;
+  bool _hasError = false;
+  ArtistInfo? _artistInfo;
+  List<TrackInfo> _topTracks = [];
+  // ignore: unused_field
   bool _isPlaying = false;
-  Duration _duration = Duration.zero;
-  Duration _position = Duration.zero;
-  double _volume = 1.0;
 
   @override
   void initState() {
     super.initState();
-    _setupAudioPlayer();
-    _fetchLyrics();
-  }
-
-  void _setupAudioPlayer() {
-    // Listen to audio duration changes
-    _audioPlayer.onDurationChanged.listen((Duration duration) {
-      setState(() => _duration = duration);
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+    
+    Future.delayed(Duration.zero, () {
+      _fetchArtistData();
     });
 
-    // Listen to audio position changes
-    _audioPlayer.onPositionChanged.listen((Duration position) {
-      setState(() => _position = position);
-    });
-
-    // Listen to player state changes
-    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
-      setState(() => _isPlaying = state == PlayerState.playing);
-    });
-
-    // Listen to player completion
-    _audioPlayer.onPlayerComplete.listen((_) {
-      setState(() {
-        _isPlaying = false;
-        _position = Duration.zero;
-      });
-    });
+    _animationController.forward();
   }
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
+  Future<void> _fetchArtistData() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
 
-  Future<void> _fetchLyrics() async {
-    final Map<String, dynamic> track = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final String trackId = track['id'];
+    try {
+      final Map<String, dynamic> args = 
+          ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final track = args['track'];
+      final String accessToken = args['accessToken'];
+      final String artistId = track['artists'][0]['id'];
 
-    final response = await http.get(Uri.parse('https://api.spotify.com/v1/tracks/$trackId'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final String lyrics = data['lyrics'] ?? 'No lyrics available.';
-      setState(() {
-        _lyrics = lyrics;
-      });
-    } else {
-      print('Failed to fetch lyrics. Status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-    }
-  }
-
-  Future<void> _playPreview() async {
-    final Map<String, dynamic> track = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final String? previewUrl = track['preview_url'];
-
-    if (previewUrl != null) {
-      try {
-        if (_isPlaying) {
-          await _audioPlayer.pause();
-        } else {
-          await _audioPlayer.play(UrlSource(previewUrl));
-          await _audioPlayer.setVolume(_volume);
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error playing preview: $e')),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No preview available for this track')),
+      // Fetch artist info
+      final artistResponse = await http.get(
+        Uri.parse('https://api.spotify.com/v1/artists/$artistId'),
+        headers: {'Authorization': 'Bearer $accessToken'},
       );
+
+      if (artistResponse.statusCode != 200) throw Exception('Failed to load artist');
+
+      final artistData = jsonDecode(artistResponse.body);
+      _artistInfo = ArtistInfo.fromJson(artistData);
+
+      // Fetch top tracks
+      final topTracksResponse = await http.get(
+        Uri.parse('https://api.spotify.com/v1/artists/$artistId/top-tracks?market=US'),
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+
+      if (topTracksResponse.statusCode == 200) {
+        final topTracksData = jsonDecode(topTracksResponse.body);
+        _topTracks = (topTracksData['tracks'] as List)
+            .map((track) => TrackInfo.fromJson(track))
+            .toList();
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching artist data: $e');
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
     }
-  }
-
-  Future<void> _seekTo(Duration position) async {
-    await _audioPlayer.seek(position);
-  }
-
-  Future<void> _setVolume(double volume) async {
-    await _audioPlayer.setVolume(volume);
-    setState(() => _volume = volume);
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> track = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final String trackName = track['name'];
-    final String artistName = track['artists'][0]['name'];
-    final String albumName = track['album']['name'];
-    final int trackDuration = track['duration_ms'];
-    final int trackPopularity = track['popularity'];
-    final String? albumImageUrl = track['album']['images'].isNotEmpty ? track['album']['images'][0]['url'] : null;
-    final String? previewUrl = track['preview_url'];
-
+    final Map<String, dynamic> args = 
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final track = args['track'];
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Song Details'),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Album art and basic info
-            Center(
-              child: Hero(
-                tag: 'album-art-${track['id']}',
-                child: albumImageUrl != null
-                    ? Container(
-                        width: 250,
-                        height: 250,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            albumImageUrl,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    : Icon(Icons.music_note, size: 250),
-              ),
-            ),
-            SizedBox(height: 24),
-            
-            // Track title and artist
-            Center(
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(track),
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    trackName,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    artistName,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  Text(
-                    albumName,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  _buildTrackSection(track),
+                  _buildPlayerSection(track),
+                  _buildArtistSection(),
                 ],
               ),
             ),
-            SizedBox(height: 32),
-
-            // Audio Player Controls
-            if (previewUrl != null) ...[
-              // Progress bar
-              Column(
-                children: [
-                  Slider(
-                    value: _position.inSeconds.toDouble(),
-                    max: _duration.inSeconds.toDouble(),
-                    onChanged: (value) {
-                      _seekTo(Duration(seconds: value.toInt()));
-                    },
-                    activeColor: Theme.of(context).colorScheme.primary,
-                    inactiveColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(_formatDuration(_position)),
-                        Text(_formatDuration(_duration)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              // Play button and volume control
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.volume_down),
-                  Expanded(
-                    child: Slider(
-                      value: _volume,
-                      min: 0,
-                      max: 1,
-                      onChanged: _setVolume,
-                      activeColor: Theme.of(context).colorScheme.secondary,
-                    ),
-                  ),
-                  Icon(Icons.volume_up),
-                ],
-              ),
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: _playPreview,
-                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                  label: Text(_isPlaying ? 'Pause' : 'Play Preview'),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  ),
-                ),
-              ),
-            ],
-            SizedBox(height: 24),
-
-            // Track Information
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Track Information',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Divider(),
-                    _buildInfoRow('Duration', _formatDuration(Duration(milliseconds: trackDuration))),
-                    _buildInfoRow('Popularity', '$trackPopularity/100'),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // Lyrics Section
-            if (_lyrics.isNotEmpty) ...[
-              Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Lyrics',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Divider(),
-                      Text(
-                        _lyrics,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
@@ -296,7 +121,11 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
-                Navigator.popUntil(context, ModalRoute.withName('/'));
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
               },
             ),
           ],
@@ -305,22 +134,177 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildSliverAppBar(Map<String, dynamic> track) {
+    final String? albumImageUrl = track['album']['images'].isNotEmpty 
+        ? track['album']['images'][0]['url'] 
+        : null;
+
+    return SliverAppBar(
+      expandedHeight: 300.0,
+      floating: false,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: Text(
+          track['name'],
+          style: TextStyle(
+            color: Colors.white,
+            shadows: [
+              Shadow(
+                offset: Offset(0, 1),
+                blurRadius: 3.0,
+                color: Colors.black.withOpacity(0.5),
+              ),
+            ],
+          ),
+        ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (albumImageUrl != null)
+              Image.network(
+                albumImageUrl,
+                fit: BoxFit.cover,
+              ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.7),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrackSection(Map<String, dynamic> track) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
-            style: Theme.of(context).textTheme.bodyLarge,
+            track['artists'][0]['name'],
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
+          SizedBox(height: 8),
           Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium,
+            'Album: ${track['album']['name']}',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(
+                Icons.music_note,
+                color: Theme.of(context).colorScheme.secondary,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                _formatDuration(track['duration_ms']),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              SizedBox(width: 24),
+              Icon(
+                Icons.bar_chart,
+                color: Theme.of(context).colorScheme.secondary,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Popularity: ${track['popularity']}/100',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildPlayerSection(Map<String, dynamic> track) {
+    return Card(
+      margin: EdgeInsets.all(16),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Preview',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            SizedBox(height: 16),
+            TrackPlayerWidget(
+              previewUrl: track['preview_url'],
+              onPlayingStateChanged: (isPlaying) {
+                setState(() => _isPlaying = isPlaying);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArtistSection() {
+    if (_artistInfo == null) {
+      return Padding(
+        padding: EdgeInsets.all(16),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator())
+            : _hasError
+                ? Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Failed to load artist information',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: _fetchArtistData,
+                          child: Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : SizedBox.shrink(),
+      );
+    }
+
+    return ArtistSectionWidget(
+      artistInfo: _artistInfo!,
+      topTracks: _topTracks,
+      onRetryPressed: _fetchArtistData,
+      isLoading: _isLoading,
+      hasError: _hasError,
+    );
+  }
+
+  String _formatDuration(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 }
