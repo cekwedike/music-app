@@ -12,17 +12,47 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
   String _lyrics = '';
   AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  double _volume = 1.0;
 
   @override
   void initState() {
     super.initState();
+    _setupAudioPlayer();
     _fetchLyrics();
   }
 
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
+  void _setupAudioPlayer() {
+    // Listen to audio duration changes
+    _audioPlayer.onDurationChanged.listen((Duration duration) {
+      setState(() => _duration = duration);
+    });
+
+    // Listen to audio position changes
+    _audioPlayer.onPositionChanged.listen((Duration position) {
+      setState(() => _position = position);
+    });
+
+    // Listen to player state changes
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      setState(() => _isPlaying = state == PlayerState.playing);
+    });
+
+    // Listen to player completion
+    _audioPlayer.onPlayerComplete.listen((_) {
+      setState(() {
+        _isPlaying = false;
+        _position = Duration.zero;
+      });
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   Future<void> _fetchLyrics() async {
@@ -48,15 +78,38 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     final String? previewUrl = track['preview_url'];
 
     if (previewUrl != null) {
-      if (_isPlaying) {
-        await _audioPlayer.stop();
-      } else {
-        await _audioPlayer.play(UrlSource(previewUrl));
+      try {
+        if (_isPlaying) {
+          await _audioPlayer.pause();
+        } else {
+          await _audioPlayer.play(UrlSource(previewUrl));
+          await _audioPlayer.setVolume(_volume);
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error playing preview: $e')),
+        );
       }
-      setState(() {
-        _isPlaying = !_isPlaying;
-      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No preview available for this track')),
+      );
     }
+  }
+
+  Future<void> _seekTo(Duration position) async {
+    await _audioPlayer.seek(position);
+  }
+
+  Future<void> _setVolume(double volume) async {
+    await _audioPlayer.setVolume(volume);
+    setState(() => _volume = volume);
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   @override
@@ -79,51 +132,160 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            albumImageUrl != null
-                ? Image.network(
-                    albumImageUrl,
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  )
-                : Icon(Icons.music_note, size: 200),
-            SizedBox(height: 16.0),
-            Text(
-              trackName,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            // Album art and basic info
+            Center(
+              child: Hero(
+                tag: 'album-art-${track['id']}',
+                child: albumImageUrl != null
+                    ? Container(
+                        width: 250,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            albumImageUrl,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : Icon(Icons.music_note, size: 250),
+              ),
             ),
-            SizedBox(height: 8.0),
-            Text(
-              'Artist: $artistName',
-              style: TextStyle(fontSize: 18),
+            SizedBox(height: 24),
+            
+            // Track title and artist
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    trackName,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    artistName,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  Text(
+                    albumName,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 8.0),
-            Text(
-              'Album: $albumName',
-              style: TextStyle(fontSize: 18),
+            SizedBox(height: 32),
+
+            // Audio Player Controls
+            if (previewUrl != null) ...[
+              // Progress bar
+              Column(
+                children: [
+                  Slider(
+                    value: _position.inSeconds.toDouble(),
+                    max: _duration.inSeconds.toDouble(),
+                    onChanged: (value) {
+                      _seekTo(Duration(seconds: value.toInt()));
+                    },
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    inactiveColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_formatDuration(_position)),
+                        Text(_formatDuration(_duration)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // Play button and volume control
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.volume_down),
+                  Expanded(
+                    child: Slider(
+                      value: _volume,
+                      min: 0,
+                      max: 1,
+                      onChanged: _setVolume,
+                      activeColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+                  Icon(Icons.volume_up),
+                ],
+              ),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: _playPreview,
+                  icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                  label: Text(_isPlaying ? 'Pause' : 'Play Preview'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+            SizedBox(height: 24),
+
+            // Track Information
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Track Information',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Divider(),
+                    _buildInfoRow('Duration', _formatDuration(Duration(milliseconds: trackDuration))),
+                    _buildInfoRow('Popularity', '$trackPopularity/100'),
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 8.0),
-            Text(
-              'Duration: ${_formatDuration(trackDuration)}',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              'Popularity: $trackPopularity',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: previewUrl != null ? _playPreview : null,
-              child: Text(_isPlaying ? 'Stop Preview' : 'Play Preview'),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              'Lyrics:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8.0),
-            Text(_lyrics),
+            SizedBox(height: 16),
+
+            // Lyrics Section
+            if (_lyrics.isNotEmpty) ...[
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Lyrics',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Divider(),
+                      Text(
+                        _lyrics,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -134,7 +296,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
             IconButton(
               icon: Icon(Icons.home),
               onPressed: () {
-                Navigator.popUntil(context, ModalRoute.withName('/home'));
+                Navigator.popUntil(context, ModalRoute.withName('/'));
               },
             ),
           ],
@@ -143,10 +305,22 @@ class _SongDetailScreenState extends State<SongDetailScreen> {
     );
   }
 
-  String _formatDuration(int milliseconds) {
-    final duration = Duration(milliseconds: milliseconds);
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes}:${seconds.toString().padLeft(2, '0')}';
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
   }
 }

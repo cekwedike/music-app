@@ -21,7 +21,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _animationController.forward();
 
-    // Navigate to home screen after 6 seconds
     Future.delayed(Duration(seconds: 6), () {
       Navigator.pushReplacementNamed(context, '/home');
     });
@@ -36,40 +35,49 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: FadeTransition(
-          opacity: _animation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.music_note,
-                size: 100,
-                color: Colors.blue,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Music Search App',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              SizedBox(height: 30),
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Loading...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.background,
+              Theme.of(context).colorScheme.surface,
             ],
+          ),
+        ),
+        child: Center(
+          child: FadeTransition(
+            opacity: _animation,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.music_note,
+                  size: 100,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Music Search App',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontSize: 28,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                SizedBox(height: 30),
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Loading...',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
           ),
         ),
       ),
