@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_result.dart';
 import 'screens/detail_screen.dart';
 import 'screens/splash_screen.dart';
+import 'providers/spotify_provider.dart';
 
 void main() {
-  runApp(MusicSearchApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => SpotifyProvider(),
+      child: MusicSearchApp(),
+    ),
+  );
 }
 
 class MusicSearchApp extends StatelessWidget {
   // Define our custom colors
-  static const primaryDark = Color(0xFF1E1E1E);  // Dark background
-  static const secondaryDark = Color(0xFF2A2A2A); // Slightly lighter dark for cards
-  static const accentPurple = Color(0xFF9C27B0);  // Vibrant purple for primary actions
-  static const accentTeal = Color(0xFF1DE9B6);    // Teal for secondary actions
-  static const textLight = Color(0xFFF5F5F5);     // Light text
-  static const textGrey = Color(0xFFB3B3B3);      // Grey text for subtitles
+  static const primaryDark = Color(0xFF1E1E1E);
+  static const secondaryDark = Color(0xFF2A2A2A);
+  static const accentPurple = Color(0xFF9C27B0);
+  static const accentTeal = Color(0xFF1DE9B6);
+  static const textLight = Color(0xFFF5F5F5);
+  static const textGrey = Color(0xFFB3B3B3);
 
   @override
   Widget build(BuildContext context) {
