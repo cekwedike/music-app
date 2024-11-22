@@ -9,18 +9,18 @@ class ArtistSectionWidget extends StatelessWidget {
   final bool hasError;
 
   const ArtistSectionWidget({
-    Key? key,
+    super.key,
     required this.artistInfo,
     required this.topTracks,
     required this.onRetryPressed,
     this.isLoading = false,
     this.hasError = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Center(
+      return const Center(
         child: CircularProgressIndicator(),
       );
     }
@@ -35,15 +35,15 @@ class ArtistSectionWidget extends StatelessWidget {
               size: 48,
               color: Theme.of(context).colorScheme.error,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Failed to load artist information',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             ElevatedButton(
               onPressed: onRetryPressed,
-              child: Text('Retry'),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -58,7 +58,7 @@ class ArtistSectionWidget extends StatelessWidget {
           Container(
             height: 200,
             width: double.infinity,
-            margin: EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               image: DecorationImage(
@@ -70,7 +70,7 @@ class ArtistSectionWidget extends StatelessWidget {
 
         // Artist Details
         Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -78,7 +78,7 @@ class ArtistSectionWidget extends StatelessWidget {
                 'About the Artist',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               _buildInfoRow(
                 context,
                 'Genres',
@@ -103,7 +103,7 @@ class ArtistSectionWidget extends StatelessWidget {
         // Top Tracks
         if (topTracks.isNotEmpty) ...[
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Text(
               'Top Tracks',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -114,12 +114,12 @@ class ArtistSectionWidget extends StatelessWidget {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: topTracks.length,
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemBuilder: (context, index) {
                 final track = topTracks[index];
                 return Container(
                   width: 160,
-                  margin: EdgeInsets.only(right: 16),
+                  margin: const EdgeInsets.only(right: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -133,7 +133,7 @@ class ArtistSectionWidget extends StatelessWidget {
                             fit: BoxFit.cover,
                           ),
                         ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         track.name,
                         style: Theme.of(context).textTheme.titleSmall,
@@ -159,7 +159,7 @@ class ArtistSectionWidget extends StatelessWidget {
 
   Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

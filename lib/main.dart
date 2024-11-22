@@ -24,6 +24,8 @@ class MusicSearchApp extends StatelessWidget {
   static const textLight = Color(0xFFF5F5F5);
   static const textGrey = Color(0xFFB3B3B3);
 
+  const MusicSearchApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -33,24 +35,23 @@ class MusicSearchApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: primaryDark,
         primaryColor: accentPurple,
-        colorScheme: ColorScheme.dark(
+        colorScheme: const ColorScheme.dark(
           primary: accentPurple,
           secondary: accentTeal,
-          background: primaryDark,
           surface: secondaryDark,
         ),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: secondaryDark,
           elevation: 0,
         ),
-        bottomAppBarTheme: BottomAppBarTheme(
+        bottomAppBarTheme: const BottomAppBarTheme(
           color: secondaryDark,
         ),
-        cardTheme: CardTheme(
+        cardTheme: const CardTheme(
           color: secondaryDark,
           elevation: 4,
         ),
-        textTheme: TextTheme(
+        textTheme: const TextTheme(
           headlineLarge: TextStyle(color: textLight, fontWeight: FontWeight.bold),
           headlineMedium: TextStyle(color: textLight),
           bodyLarge: TextStyle(color: textLight),
@@ -63,19 +64,19 @@ class MusicSearchApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
           ),
-          hintStyle: TextStyle(color: textGrey),
+          hintStyle: const TextStyle(color: textGrey),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: accentPurple,
             foregroundColor: textLight,
-            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
           ),
         ),
-        iconTheme: IconThemeData(
+        iconTheme: const IconThemeData(
           color: accentTeal,
         ),
       ),
@@ -83,7 +84,7 @@ class MusicSearchApp extends StatelessWidget {
       routes: {
         '/': (context) => SplashScreen(),
         '/home': (context) => HomeScreen(),
-        '/searchResult': (context) => SearchResultScreen(searchResults: []),
+        '/searchResult': (context) => const SearchResultScreen(searchResults: []),
         '/detail': (context) => SongDetailScreen(),
       },
     );

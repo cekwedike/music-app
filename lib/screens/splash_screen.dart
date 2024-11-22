@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -14,14 +16,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
 
     _animation = Tween<double>(begin: 0, end: 1).animate(_animationController);
 
     _animationController.forward();
 
-    Future.delayed(Duration(seconds: 6), () {
+    Future.delayed(const Duration(seconds: 6), () {
       Navigator.pushReplacementNamed(context, '/home');
     });
   }
@@ -41,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).colorScheme.background,
+              Theme.of(context).colorScheme.surface,
               Theme.of(context).colorScheme.surface,
             ],
           ),
@@ -57,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   size: 100,
                   color: Theme.of(context).colorScheme.secondary,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   'Music Search App',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -65,13 +67,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     letterSpacing: 1.5,
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
                     Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   'Loading...',
                   style: Theme.of(context).textTheme.bodyMedium,

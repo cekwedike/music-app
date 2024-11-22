@@ -6,10 +6,10 @@ class TrackPlayerWidget extends StatefulWidget {
   final Function(bool) onPlayingStateChanged;
 
   const TrackPlayerWidget({
-    Key? key,
+    super.key,
     required this.previewUrl,
     required this.onPlayingStateChanged,
-  }) : super(key: key);
+  });
 
   @override
   _TrackPlayerWidgetState createState() => _TrackPlayerWidgetState();
@@ -95,8 +95,8 @@ class _TrackPlayerWidgetState extends State<TrackPlayerWidget> {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 4.0,
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.0),
-            overlayShape: RoundSliderOverlayShape(overlayRadius: 14.0),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
           ),
           child: Slider(
             value: _position.inSeconds.toDouble(),
@@ -111,7 +111,7 @@ class _TrackPlayerWidgetState extends State<TrackPlayerWidget> {
 
         // Duration labels
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -127,7 +127,7 @@ class _TrackPlayerWidgetState extends State<TrackPlayerWidget> {
           ),
         ),
 
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
 
         // Volume control
         Row(
@@ -148,8 +148,8 @@ class _TrackPlayerWidgetState extends State<TrackPlayerWidget> {
               child: SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 3.0,
-                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5.0),
-                  overlayShape: RoundSliderOverlayShape(overlayRadius: 12.0),
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5.0),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12.0),
                 ),
                 child: Slider(
                   value: _volume,
@@ -165,7 +165,7 @@ class _TrackPlayerWidgetState extends State<TrackPlayerWidget> {
               ),
             ),
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.volume_up,
                 size: 20,
               ),
@@ -185,7 +185,7 @@ class _TrackPlayerWidgetState extends State<TrackPlayerWidget> {
           icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
           label: Text(_isPlaying ? 'Pause' : 'Play Preview'),
           style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),

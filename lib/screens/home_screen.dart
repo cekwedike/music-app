@@ -3,12 +3,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String clientId = 'edf71530ea9242e7ad70adaedbded238';
   String clientSecret = '737fe2303ac84d83af8acfcdc71093ff';
   String? _accessToken;
@@ -45,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to connect to Spotify. Please try again.'),
+          content: const Text('Failed to connect to Spotify. Please try again.'),
           action: SnackBarAction(
             label: 'Retry',
             onPressed: _getAccessToken,
@@ -58,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _searchTracks(String query) async {
     if (_accessToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please wait for connection to Spotify...'),
           duration: Duration(seconds: 2),
         ),
@@ -91,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to search tracks. Please try again.'),
+          content: const Text('Failed to search tracks. Please try again.'),
           action: SnackBarAction(
             label: 'Retry',
             onPressed: () => _searchTracks(query),
@@ -107,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Music Search App'),
+        title: const Text('Music Search App'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -115,9 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedSwitcher(
-              duration: Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
               child: _isLoading
-                  ? CircularProgressIndicator()
+                  ? const CircularProgressIndicator()
                   : Column(
                       children: [
                         TextField(
@@ -125,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: InputDecoration(
                             labelText: 'Search',
                             hintText: 'Enter a song or artist name',
-                            prefixIcon: Icon(Icons.search),
+                            prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -136,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                         ),
-                        SizedBox(height: 16.0),
+                        const SizedBox(height: 16.0),
                         ElevatedButton(
                           onPressed: () {
                             String query = _searchController.text.trim();
@@ -145,12 +147,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
                           ),
-                          child: Text('Search'),
+                          child: const Text('Search'),
                         ),
                       ],
                     ),
@@ -163,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onPressed: () {
                 // Do nothing, already on home screen
               },

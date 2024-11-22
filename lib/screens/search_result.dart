@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 class SearchResultScreen extends StatefulWidget {
   final List<dynamic> searchResults;
 
-  const SearchResultScreen({Key? key, required this.searchResults}) : super(key: key);
+  const SearchResultScreen({super.key, required this.searchResults});
 
   @override
   _SearchResultScreenState createState() => _SearchResultScreenState();
@@ -20,7 +20,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _animation = CurvedAnimation(
@@ -46,10 +46,10 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Search Results'),
+        title: const Text('Search Results'),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -61,7 +61,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onPressed: () {
                 HapticFeedback.lightImpact();
                 Navigator.pushNamedAndRemoveUntil(
@@ -89,12 +89,12 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
               size: 64,
               color: Theme.of(context).colorScheme.secondary,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'No results found',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Try searching with different keywords',
               style: Theme.of(context).textTheme.bodyMedium,
@@ -110,7 +110,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
       animation: _animation,
       builder: (context, child) {
         return ListView.builder(
-          physics: BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
           itemCount: tracks.length,
           itemBuilder: (context, index) {
             final track = tracks[index];
@@ -123,7 +123,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
 
             // Calculate staggered animation delay
             final itemAnimation = Tween<Offset>(
-              begin: Offset(1, 0),
+              begin: const Offset(1, 0),
               end: Offset.zero,
             ).animate(
               CurvedAnimation(
@@ -139,7 +139,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
             return SlideTransition(
               position: itemAnimation,
               child: Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -158,7 +158,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
                         // Album Art
@@ -172,7 +172,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
                                 color: Colors.black.withOpacity(0.2),
                                 spreadRadius: 1,
                                 blurRadius: 3,
-                                offset: Offset(0, 2),
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
@@ -201,7 +201,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
                                   ),
                           ),
                         ),
-                        SizedBox(width: 16),
+                        const SizedBox(width: 16),
                         // Track Info
                         Expanded(
                           child: Column(
@@ -213,14 +213,14 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 artistName,
                                 style: Theme.of(context).textTheme.bodyMedium,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Row(
                                 children: [
                                   Icon(
@@ -228,7 +228,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
                                     size: 14,
                                     color: Theme.of(context).colorScheme.secondary,
                                   ),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       track['album']['name'],
@@ -253,7 +253,7 @@ class _SearchResultScreenState extends State<SearchResultScreen> with SingleTick
                                   : Theme.of(context).colorScheme.secondary.withOpacity(0.3),
                               size: 16,
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Icon(
                               Icons.play_circle_filled,
                               color: Theme.of(context).colorScheme.primary,

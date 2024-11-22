@@ -6,6 +6,8 @@ import '../widgets/artist_section_widget.dart';
 import '../models/spotify_models.dart';
 
 class SongDetailScreen extends StatefulWidget {
+  const SongDetailScreen({super.key});
+
   @override
   _SongDetailScreenState createState() => _SongDetailScreenState();
 }
@@ -25,7 +27,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _fadeAnimation = CurvedAnimation(
@@ -119,7 +121,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onPressed: () {
                 Navigator.pushNamedAndRemoveUntil(
                   context,
@@ -150,7 +152,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
             color: Colors.white,
             shadows: [
               Shadow(
-                offset: Offset(0, 1),
+                offset: const Offset(0, 1),
                 blurRadius: 3.0,
                 color: Colors.black.withOpacity(0.5),
               ),
@@ -185,7 +187,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
 
   Widget _buildTrackSection(Map<String, dynamic> track) {
     return Padding(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -193,12 +195,12 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
             track['artists'][0]['name'],
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Album: ${track['album']['name']}',
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Row(
             children: [
               Icon(
@@ -206,18 +208,18 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
                 color: Theme.of(context).colorScheme.secondary,
                 size: 20,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 _formatDuration(track['duration_ms']),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              SizedBox(width: 24),
+              const SizedBox(width: 24),
               Icon(
                 Icons.bar_chart,
                 color: Theme.of(context).colorScheme.secondary,
                 size: 20,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 'Popularity: ${track['popularity']}/100',
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -231,9 +233,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
 
   Widget _buildPlayerSection(Map<String, dynamic> track) {
     return Card(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -241,7 +243,7 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
               'Preview',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TrackPlayerWidget(
               previewUrl: track['preview_url'],
               onPlayingStateChanged: (isPlaying) {
@@ -257,9 +259,9 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
   Widget _buildArtistSection() {
     if (_artistInfo == null) {
       return Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: _isLoading
-            ? Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator())
             : _hasError
                 ? Center(
                     child: Column(
@@ -269,20 +271,20 @@ class _SongDetailScreenState extends State<SongDetailScreen> with SingleTickerPr
                           size: 48,
                           color: Theme.of(context).colorScheme.error,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'Failed to load artist information',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: _fetchArtistData,
-                          child: Text('Retry'),
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
                   )
-                : SizedBox.shrink(),
+                : const SizedBox.shrink(),
       );
     }
 
